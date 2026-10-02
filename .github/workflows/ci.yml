@@ -1,0 +1,36 @@
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # O juiz de tudo e o otimo de Belady, e o juiz do otimo e uma busca
+      # exaustiva que tenta todas as escolhas de despejo. A anomalia de Belady e
+      # procurada nas cadeias canonicas, e a premissa que permite isso (renomear
+      # paginas nao muda as faltas) tambem e testada.
+      - name: testes
+        run: dotnet test testes/Cache.Testes/Cache.Testes.csproj -c Release --nologo -v q
+
+      # As medidas rodam para REGISTRAR numeros. Nao ha asseveracao de tempo.
+      - name: taxa de acerto por carga, contra o otimo
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- carga
+
+      - name: a menor anomalia de cada politica
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- anomalia
